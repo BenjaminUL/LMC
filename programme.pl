@@ -43,9 +43,15 @@ regle((_ ?= T),simplify) :- atomic(T),!.
 
 regle((T ?= _),orient) :- nonvar(T),!.
 
-regle((X ?= T),check) :- X \== T,occur_check(X,T),!.
+regle((X ?= T),check) :- X \== T, var(X), occur_check(X,T),!.
 
+regle((X ?= T),expand) :- var(X), compound(T), not(occur_check(X,T)), !.
 
+regle((X ?= T),decompose) :- compound(X), compound(T), functor(X,A1,N1), functor(X,AX,NX), A1 == AX, N1 == NX, !.
+
+regle((X ?= T),clash) :- compound(X), compound(T), functor(X,_,A1), functor(T,_,A2), A1 \== A2, !.
+
+regle((X ?= T),clash) :- compound(X), compound(T), functor(X,A1,_), functor(T,A2,_), A1 \== A2, !.
 
 
 
