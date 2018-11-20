@@ -53,8 +53,16 @@ regle((X ?= T),clash) :- compound(X), compound(T), functor(X,_,A1), functor(T,_,
 
 regle((X ?= T),clash) :- compound(X), compound(T), functor(X,A1,_), functor(T,A2,_), A1 \== A2, !.
 
+% prédicat qui vont servir pour créer les prédicats réduits
 
+concat([],X,X).
+concat([X|P],Y,[X|Q]) :- concat(P,Y,Q).
 
+% Liste des prédicats réduits:
+
+reduit(check,_,_,_) :- echo(system : [X ?= Y|P]),echo('\n'),echo(check : (X ?= Y)),echo('\n'),write('Système non unifiable'),fail,!.
+
+reduit(orient,[X ?= T], P;S, [T ?= X|P];S) :- echo(system : [X ?= T|P]), echo('\n'), echo(orient : (X ?= T)), echo('\n'), !.
 
 
 
