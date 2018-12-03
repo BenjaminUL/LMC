@@ -64,6 +64,69 @@ reduit(check,_,_,_) :- echo(system : [X ?= Y|P]),echo('\n'),echo(check : (X ?= Y
 
 reduit(orient,[X ?= T], P;S, [T ?= X|P];S) :- echo(system : [X ?= T|P]), echo('\n'), echo(orient : (X ?= T)), echo('\n'), !.
 
+reduit(clash,_,_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(clash : (X ?= T)),echo('\n'),write('Système non unifiable'),fail, !.
 
 
+% a partir de là, pas tester
+
+% ajout du prédicat substitution pour les prédicats réduits suivants
+% on remplace premier parametre par deuxieme parametre dans équation du troisieme parametre
+% et on met le resultat dans le quatrieme parametre
+
+substitution(_,_,[],[]) :- !.
+
+substitution(X,T,[A ?= B|P],[A2 ?= B2|P2]) :- substitution_terme(X,T,A,A2),substitution_terme(X,T,B,B2),substitution(X,T,P,P2)
+
+substitution_terme(X,T,A,T) :- A == X, not(compound(A)), !.
+
+substitution_terme(X,_,A,A) :- A \== X,not(compound(A)), !.
+
+substitution_terme(X,T,A,Q) :- compound(A), functor(A,_,At),substitution_autre(X,T,A,At,Q), !.
+
+% substitution_autre pour substitution fonction
+
+substitution_autre(X,T,A,1,Q):- functor(A,F,At),arg(1,A,VX),substitution_terme(X,T,VX,R),arg(1,Q,R),functor(Q,F,At), !.
+
+substitution_autre(X,T,A,N,Q):- functor(A,F,At),arg(N,A,VX),substitution_terme(X,T,VX,R),arg(N,Q,R),functor(Q,F,At), N2 is (N-1),substitution_autre(X,T,A,N2,Q), !.
+
+% arg_list
+
+arg_list(1,(X ?= T),L1,L2):- L2=[VX ?= VT | L1],arg(1,X,VX),arg(1,T,VT), !.
+
+arg_list(N,(X ?= T),L1,L2):- N2 is (N-1),arg(N,X,VX),arg(N,T,VT),arg_list(N2,X ?= T,[VX ?= VY |L1],L2).
+
+
+% fin predicats pour reduit, donc suite predicats reduit
+
+
+reduit(rename,(X ?= T), P;S , A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n'),echo(rename: (X ?= T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B), !.
+
+reduit(simplify,(X ?= T), P;S, A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n'),echo(simplify: (X ?= T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B), !.
+
+reduit(expand,(X ?= T), P;S, A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n'),echo(rename: (X ?= T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B), !.
+
+reduit(decompose,(X ?= T), P;S, Q;S):- echo(system :[X = T|P]),echo('\n'),echo(decompose: (X ?= T)),echo('\n'), functor(X,_,A), arg_list(A,X ?= T,[],L2), concat(L2,P,Q), !.
+
+ % Question 2
+
+% Echelle de poids indiqué :
+poids(clash,5).
+poids(check,5).
+poids(rename,4).
+poids(simplify,4).
+poids(orient,3).
+poids(decompose,2).
+poids(expand,1).
+
+
+choix_premier([],_,_,_):- !.
+choix_premier([E|P],Q,E,R):- regle(E,R),reduit(R,E,P;Q,P2;Q2),unifie2(P2,Q2).
+
+% commencer a écrire prédicats suivants
+
+choix_pondere():-!.
+choix_pondere():-.
+
+unifie2():-!.
+unifie2():-.
 
