@@ -118,15 +118,24 @@ poids(orient,3).
 poids(decompose,2).
 poids(expand,1).
 
+% commencer a écrire prédicats suivants
+
+println([]):- echo('\n'), !.
+println([X = T | P]):-  echo('X = T'),echo('\n'),println(P).
+
+unifie2([],Q):- echo('\n'),println(Q),write('Système équation unifiable'),!.
+unifie2([X|P1],Q1):-regle(X,R),reduit(R,X,P1;Q1,P2;Q2),unifie2(P2,Q2).
+
+unifie([X|P],premier):- choix_premier([X|P],_,_,_).
+unifie(P,pondere):- choix_ondere(P,_,_,_).
 
 choix_premier([],_,_,_):- !.
 choix_premier([E|P],Q,E,R):- regle(E,R),reduit(R,E,P;Q,P2;Q2),unifie2(P2,Q2).
 
-% commencer a écrire prédicats suivants
-
 choix_pondere():-!.
 choix_pondere():-.
 
-unifie2():-!.
-unifie2():-.
+% predicats pour choix pondere, a instancier regle de poids, et element a retirer
+
+ordrePoids([X],R,X):- regle(X,R), !.
 
