@@ -132,10 +132,27 @@ unifie(P,pondere):- choix_ondere(P,_,_,_).
 choix_premier([],_,_,_):- !.
 choix_premier([E|P],Q,E,R):- regle(E,R),reduit(R,E,P;Q,P2;Q2),unifie2(P2,Q2).
 
-choix_pondere():-!.
-choix_pondere():-.
+choix_pondere([],Q,_,_):-echo('\n'),affiche(Q),write('Systeme non unifiable'),!.
+choix_pondere(P1,Q,E,R):-ordrePoids(P1,R,E),retirerElement(E,P1,P2),reduit(R,E,P2;Q,P3;Q3),choix_pondere(P3,Q3,_,_).
 
 % predicats pour choix pondere, a instancier regle de poids, et element a retirer
 
+retirerElement(_,[],[]):- !.
+retirerElement(X,[T | R],Val):- X == T, Val = R, !.
+retirerElement(X,[T | R],Val):- X \== T, retirerElement(X,R,Val).
+
 ordrePoids([X],R,X):- regle(X,R), !.
+ordrePoids([X,T|P],R,E):- P1 =< P2,regle(X,R1),poids(R1,P1),regle(T,P2),poids(R2,P2),ordrePoids([T|P],R,E), !.
+ordrePoids([X,T|P],R,E):- P1 >= P2,regle(X,R1),poids(R1,P1),regle(T,P2),poids(R2,P2),ordrePoids([X|P],R,E), !.
+
+unifie(P,premier):- choix_premier(P,Z,E,R).
+unifie(P,pondere):- choix_pondere(P,Z,E,R).
+unifie(P):- choix_premier(P,Z,E,R).
+
+
+% Fin question 2, debut question 3
+
+trace_unif(P,Strategie):- set_echo,unifie(P,Strategie),clr_echo,!.
+unif(P,Strategie):- clr_echo,unifie(P,Strategie),clr_echo, !.
+
 
