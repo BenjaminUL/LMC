@@ -61,11 +61,11 @@ concat([X|P],Y,[X|Q]) :- concat(P,Y,Q).
 
 % Liste des prédicats réduits:
 
-reduit(check,_,_,_) :- echo(system : [X ?= Y|P]),echo('\n'),echo(check : (X ?= Y)),echo('\n'),write('Système non unifiable'),fail,!.
+reduit(check,[X ?= T],_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(check : (X ?= T)),echo('\n'),write('Système non unifiable'),fail,!.
 
 reduit(orient,[X ?= T], P;S, [T ?= X|P];S) :- echo(system : [X ?= T|P]), echo('\n'), echo(orient : (X ?= T)), echo('\n'), !.
 
-reduit(clash,_,_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(clash : (X ?= T)),echo('\n'),write('Système non unifiable'),fail, !.
+reduit(clash,[X ?= T],_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(clash : (X ?= T)),echo('\n'),write('Système non unifiable'),fail, !.
 
 
 % a partir de là, pas tester
@@ -104,7 +104,7 @@ reduit(rename,(X ?= T), P;S , A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n')
 
 reduit(simplify,(X ?= T), P;S, A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n'),echo(simplify: (X ?= T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B), !.
 
-reduit(expand,(X ?= T), P;S, A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n'),echo(rename: (X ?= T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B), !.
+reduit(expand,(X ?= T), P;S, A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n'),echo(expand: (X ?= T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B), !.
 
 reduit(decompose,(X ?= T), P;S, Q;S):- echo(system :[X = T|P]),echo('\n'),echo(decompose: (X ?= T)),echo('\n'), functor(X,_,A), arg_list(A,X ?= T,[],L2), concat(L2,P,Q), !.
 
@@ -122,7 +122,7 @@ poids(expand,1).
 % commencer a écrire prédicats suivants
 
 println([]):- echo('\n'), !.
-println([X = T | P]):-  echo('X = T'),echo('\n'),println(P).
+println([X = T | P]):-  echo(X = T),echo('\n'),println(P).
 
 unifie2([],Q):- echo('\n'),println(Q),write('Système équation unifiable'),!.
 unifie2([X|P1],Q1):-regle(X,R),reduit(R,X,P1;Q1,P2;Q2),unifie2(P2,Q2).
@@ -143,17 +143,15 @@ retirerElement(X,[T | R],Val):- X == T, Val = R, !.
 retirerElement(X,[T | R],Val):- X \== T, retirerElement(X,R,Val).
 
 ordrePoids([X],R,X):- regle(X,R), !.
-ordrePoids([X,T|P],R,E):- P1 =< P2,regle(X,R1),poids(R1,P1),regle(T,P2),poids(R2,P2),ordrePoids([T|P],R,E), !.
-ordrePoids([X,T|P],R,E):- P1 >= P2,regle(X,R1),poids(R1,P1),regle(T,P2),poids(R2,P2),ordrePoids([X|P],R,E), !.
+ordrePoids([X,T|P],R,E):- P1 =< P2,regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),ordrePoids([T|P],R,E), !.
+ordrePoids([X,T|P],R,E):- P1 >= P2,regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),ordrePoids([X|P],R,E), !.
 
-unifie(P,premier):- choix_premier(P,Z,E,R).
-unifie(P,pondere):- choix_pondere(P,Z,E,R).
-unifie(P):- choix_premier(P,Z,E,R).
+unifie(P,premier):- choix_premier(P,_,_,_).
+unifie(P,pondere):- choix_pondere(P,_,_,_).
+unifie(P):- choix_premier(P,_,_,_).
 
 
 % Fin question 2, debut question 3
 
 trace_unif(P,Strategie):- set_echo,unifie(P,Strategie),clr_echo,!.
 unif(P,Strategie):- clr_echo,unifie(P,Strategie),clr_echo, !.
-
-
