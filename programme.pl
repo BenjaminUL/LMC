@@ -59,15 +59,6 @@ regle((X ?= T),clash) :- compound(X), compound(T), functor(X,_,N1), functor(T,_,
 concat([],X,X).
 concat([X|P],Y,[X|Q]) :- concat(P,Y,Q).
 
-% Liste des prédicats réduits:
-
-reduit(check,[X ?= T],_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(check : (X ?= T)),echo('\n'),write('Système non unifiable'),fail,!.
-
-reduit(orient,[X ?= T], P;S, [T ?= X|P];S) :- echo(system : [X ?= T|P]), echo('\n'), echo(orient : (X ?= T)), echo('\n'), !.
-
-reduit(clash,[X ?= T],_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(clash : (X ?= T)),echo('\n'),write('Système non unifiable'),fail, !.
-
-
 % a partir de là, pas tester
 
 % ajout du prédicat substitution pour les prédicats réduits suivants
@@ -92,15 +83,22 @@ substitution_autre(X,T,A,N,Q):- functor(A,F,At),arg(N,A,VX),substitution_terme(X
 
 % arg_list
 
-arg_list(1,(X ?= T),L1,L2):- L2=[VX ?= VT | L1],arg(1,X,VX),arg(1,T,VT), !.
+arg_list(1,(X ?= T),L1,[VX ?= VT | L1]):- arg(1,X,VX),arg(1,T,VT), !.
 
-arg_list(N,(X ?= T),L1,L2):- N2 is (N-1),arg(N,X,VX),arg(N,T,VT),arg_list(N2,X ?= T,[VX ?= VY |L1],L2).
+arg_list(N,(X ?= T),L1,L2):- N2 is (N-1),arg(N,X,VX),arg(N,T,VT),arg_list(N2,X ?= T,[VX ?= VT |L1],L2),!.
 
 
 % fin predicats pour reduit, donc suite predicats reduit
 
+% Liste des prédicats réduits:
 
-reduit(rename,(X ?= T), P;S , A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n'),echo(rename: (X ?= T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B), !.
+reduit(check,[X ?= T],_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(check : (X ?= T)),echo('\n'),write('Système non unifiable'),fail,!.
+
+reduit(orient,[X ?= T], P;S, [T ?= X|P];S) :- echo(system : [X ?= T|P]), echo('\n'), echo(orient : (X ?= T)), echo('\n'), !.
+
+reduit(clash,[X ?= T],_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(clash : (X ?= T)),echo('\n'),write('Système non unifiable'),fail, !.
+
+reduit(rename,(X ?= T), P;S , A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n'),echo(rename: (X ?= T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B).
 
 reduit(simplify,(X ?= T), P;S, A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n'),echo(simplify: (X ?= T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B), !.
 
@@ -126,9 +124,6 @@ println([X = T | P]):-  echo(X = T),echo('\n'),println(P).
 
 unifie2([],Q):- echo('\n'),println(Q),write('Système équation unifiable'),!.
 unifie2([X|P1],Q1):-regle(X,R),reduit(R,X,P1;Q1,P2;Q2),unifie2(P2,Q2).
-
-unifie([X|P],premier):- choix_premier([X|P],_,_,_).
-unifie(P,pondere):- choix_ondere(P,_,_,_).
 
 choix_premier([],_,_,_):- !.
 choix_premier([E|P],Q,E,R):- regle(E,R),reduit(R,E,P;Q,P2;Q2),unifie2(P2,Q2).
