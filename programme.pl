@@ -25,10 +25,10 @@ occur_check(V,T) :- V == T, !.
 occur_check(V,T) :- compound(T),functor(T,_,A),occur_check_base(V,T,A).
 
 % T est un fonction avec une arité de 1:
-occur_check_base(V,T,N) :- arg(1,T,X),!,occur_check(V,X).
+occur_check_base(V,T,1) :- arg(1,T,X),!,occur_check(V,X).
 
 % T est un fonction avec un arité supérieur à 1:
-occur_check_base(V,T,N) :- arg(N,T,X),occur_check(V,X);A1 is (A-1),occur_check_base(V,T,A1).
+occur_check_base(V,T,N) :- arg(N,T,X),occur_check(V,X);N1 is (N-1),occur_check_base(V,T,N1).
 
 
 
@@ -47,11 +47,12 @@ regle((X ?= T),check) :- X \== T, var(X), occur_check(X,T),!.
 
 regle((X ?= T),expand) :- var(X), compound(T), not(occur_check(X,T)), !.
 
-regle((X ?= T),decompose) :- compound(X), compound(T), functor(X,A1,N1), functor(X,AX,NX), A1 == AX, N1 == NX, !.
-
-regle((X ?= T),clash) :- compound(X), compound(T), functor(X,_,A1), functor(T,_,A2), A1 \== A2, !.
+regle((X ?= T),decompose) :- compound(X), compound(T), functor(X,A1,N1), functor(T,A1,N1), !.
 
 regle((X ?= T),clash) :- compound(X), compound(T), functor(X,A1,_), functor(T,A2,_), A1 \== A2, !.
+
+regle((X ?= T),clash) :- compound(X), compound(T), functor(X,_,N1), functor(T,_,N2), N1 \== N2, !.
+
 
 % prédicat qui vont servir pour créer les prédicats réduits
 
@@ -75,7 +76,7 @@ reduit(clash,_,_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(clash : (X ?= T
 
 substitution(_,_,[],[]) :- !.
 
-substitution(X,T,[A ?= B|P],[A2 ?= B2|P2]) :- substitution_terme(X,T,A,A2),substitution_terme(X,T,B,B2),substitution(X,T,P,P2)
+substitution(X,T,[A ?= B|P],[A2 ?= B2|P2]) :- substitution_terme(X,T,A,A2),substitution_terme(X,T,B,B2),substitution(X,T,P,P2).
 
 substitution_terme(X,T,A,T) :- A == X, not(compound(A)), !.
 
