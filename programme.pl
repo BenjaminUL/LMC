@@ -47,7 +47,7 @@ regle((X ?= T),check) :- X \== T, var(X), occur_check(X,T),!.
 
 regle((X ?= T),expand) :- var(X), compound(T), not(occur_check(X,T)), !.
 
-regle((X ?= T),decompose) :- compound(X), compound(T), functor(X,A1,N1), functor(T,A1,N1), !.
+regle((X ?= T),decompose) :- compound(X), compound(T), functor(X,A1,N1), functor(T,A2,N2),A1==A2,N1==N2,!.
 
 regle((X ?= T),clash) :- compound(X), compound(T), functor(X,A1,_), functor(T,A2,_), A1 \== A2, !.
 
@@ -58,8 +58,6 @@ regle((X ?= T),clash) :- compound(X), compound(T), functor(X,_,N1), functor(T,_,
 
 concat([],X,X).
 concat([X|P],Y,[X|Q]) :- concat(P,Y,Q).
-
-% a partir de là, pas tester
 
 % ajout du prédicat substitution pour les prédicats réduits suivants
 % on remplace premier parametre par deuxieme parametre dans équation du troisieme parametre
@@ -85,18 +83,18 @@ substitution_autre(X,T,A,N,Q):- functor(A,F,At),arg(N,A,VX),substitution_terme(X
 
 arg_list(1,(X ?= T),L1,[VX ?= VT | L1]):- arg(1,X,VX),arg(1,T,VT), !.
 
-arg_list(N,(X ?= T),L1,L2):- N2 is (N-1),arg(N,X,VX),arg(N,T,VT),arg_list(N2,X ?= T,[VX ?= VT |L1],L2),!.
+arg_list(N,(X ?= T),L1,L2):- N2 is (N-1),arg(N,X,VX),arg(N,T,VT),arg_list(N2,X ?= T,[VX ?= VT|L1],L2),!.
 
 
 % fin predicats pour reduit, donc suite predicats reduit
 
 % Liste des prédicats réduits:
 
-reduit(check,[X ?= T],_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(check : (X ?= T)),echo('\n'),write('Système non unifiable'),fail,!.
+reduit(check,(X ?= T),_,_) :- echo(system : [X ?= T|P]),echo("\n"),echo(check : (X ?= T)),echo('\n'),write('Systeme non unifiable'),fail,!.
 
-reduit(orient,[X ?= T], P;S, [T ?= X|P];S) :- echo(system : [X ?= T|P]), echo('\n'), echo(orient : (X ?= T)), echo('\n'), !.
+reduit(orient,(X ?= T), P;S, [T ?= X|P];S) :- echo(system : [X ?= T|P]), echo('\n'), echo(orient : (X ?= T)), echo('\n'), !.
 
-reduit(clash,[X ?= T],_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(clash : (X ?= T)),echo('\n'),write('Système non unifiable'),fail, !.
+reduit(clash,(X ?= T),_,_) :- echo(system : [X ?= T|P]),echo('\n'),echo(clash : (X ?= T)),echo('\n'),write('Systeme non unifiable'),fail, !.
 
 reduit(rename,(X ?= T), P;S , A;[X = T|B]):- echo(system :[X ?= T|P]),echo('\n'),echo(rename: (X ?= T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B).
 
@@ -120,26 +118,30 @@ poids(expand,1).
 % commencer a écrire prédicats suivants
 
 println([]):- echo('\n'), !.
-println([X = T | P]):-  echo(X = T),echo('\n'),println(P).
+println([X=T|P]):-  echo(X = T),echo('\n'),println(P).
 
-unifie2([],Q):- echo('\n'),println(Q),write('Système équation unifiable'),!.
-unifie2([X|P1],Q1):-regle(X,R),reduit(R,X,P1;Q1,P2;Q2),unifie2(P2,Q2).
+unifie2([],Q):- echo('\n'),println(Q),write('Systeme equation unifiable'),!.
+unifie2([X|P1],Q1):- regle(X,R),reduit(R,X,P1;Q1,P2;Q2),unifie2(P2,Q2).
+
+% predicats pour choix pondere, a instancier regle de poids, et element a retirer
+
+
+retirerElement(_,[],[]):- !.
+retirerElement(X,[T|R],Val):- X == T, Val = R, !.
+retirerElement(X,[T|R],Val):- X \== T, retirerElement(X,R,Val).
+
+% test appronfondi jusque ici
+
+ordrePoids([X],R,X):- regle(X,R), !.
+ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 =< P2, !,ordrePoids([T|P],R,E).
+ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 >= P2, !,ordrePoids([X|P],R,E).
 
 choix_premier([],_,_,_):- !.
 choix_premier([E|P],Q,E,R):- regle(E,R),reduit(R,E,P;Q,P2;Q2),unifie2(P2,Q2).
 
-choix_pondere([],Q,_,_):-echo('\n'),affiche(Q),write('Systeme non unifiable'),!.
-choix_pondere(P1,Q,E,R):-ordrePoids(P1,R,E),retirerElement(E,P1,P2),reduit(R,E,P2;Q,P3;Q3),choix_pondere(P3,Q3,_,_).
+choix_pondere([],Q,_,_):- echo('\n'),affiche(Q),write('Systeme non unifiable'),!.
+choix_pondere(P1,Q,E,R):- ordrePoids(P1,R,E),retirerElement(E,P1,P2),reduit(R,E,P2;Q,P3;Q3),choix_pondere(P3,Q3,_,_).
 
-% predicats pour choix pondere, a instancier regle de poids, et element a retirer
-
-retirerElement(_,[],[]):- !.
-retirerElement(X,[T | R],Val):- X == T, Val = R, !.
-retirerElement(X,[T | R],Val):- X \== T, retirerElement(X,R,Val).
-
-ordrePoids([X],R,X):- regle(X,R), !.
-ordrePoids([X,T|P],R,E):- P1 =< P2,regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),ordrePoids([T|P],R,E), !.
-ordrePoids([X,T|P],R,E):- P1 >= P2,regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),ordrePoids([X|P],R,E), !.
 
 unifie(P,premier):- choix_premier(P,_,_,_).
 unifie(P,pondere):- choix_pondere(P,_,_,_).
@@ -150,3 +152,21 @@ unifie(P):- choix_premier(P,_,_,_).
 
 trace_unif(P,Strategie):- set_echo,unifie(P,Strategie),clr_echo,!.
 unif(P,Strategie):- clr_echo,unifie(P,Strategie),clr_echo, !.
+
+% amelioration affichage
+
+instruction(P,Strategie,y) :- trace_unif(P,Strategie), !.
+instruction(P,Strategie,n) :- unif(P,Strategie), !.
+
+option(y): demarrer.
+option(n): fail, !.
+
+fin :- write('Souhaitez-vous continuer a utiliser le programme? Entrer y pour oui ou n pour non'),write('>> Choix:'),read(Choix),option(Choix), !.
+
+demarrer :- write('Ecrire le systeme que vous souhaitez unifier: \n'), write('>> Systeme equation:'), read(Sys),write('\n Differents choix de stratégie: laquelle désirez-vous utiliser ? Entrer premier ou pondere \n'),write('>> Strategie :'),read(Strat),write('\n Souhaitez-vous faire apparaitre dans le terminal la trace ? Entrer y pour oui ou n pour non \n'),write('>> Choix:'),read(Choix),instruction(Sys,Strat,Choix),fin, !.
+
+sujet :- write('\t Ce programme repose sur l\'Algorithme d\'unification de Martelli-Montanari \n'),demarrer, !.
+
+
+
+
