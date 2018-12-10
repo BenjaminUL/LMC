@@ -92,17 +92,17 @@ arg_list(N,(X ?= T),L1,L2):- N2 is (N-1),arg(N,X,VX),arg(N,T,VT),arg_list(N2,X ?
 
 reduit(check,(X ?= T),_,_) :- echo(system : [X = T|P]),echo("\n"),echo(check : (X = T)),echo('\n'),write('Systeme non unifiable'),fail,!.
 
-reduit(orient,(X ?= T), P;S, [X ?= T|P];S) :- echo(system : [X = T|P]), echo('\n'), echo(orient : (X = T)), echo('\n'), !.
+reduit(orient,(X ?= T), P;S, [X ?= T|P];S) :- echo(system : [X = T|P]), echo('\n'), echo(orient : (X = T)), echo('\n').
 
 reduit(clash,(X ?= T),_,_) :- echo(system : [X = T|P]),echo('\n'),echo(clash : (X = T)),echo('\n'),write('Systeme non unifiable'),fail, !.
 
 reduit(rename,(X ?= T), P;S , A;[X = T|B]):- echo(system :[X = T|P]),echo('\n'),echo(rename: (X = T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B).
 
-reduit(simplify,(X ?= T), P;S, A;[X = T|B]):- echo(system :[X = T|P]),echo('\n'),echo(simplify: (X = T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B), !.
+reduit(simplify,(X ?= T), P;S, A;[X = T|B]):- echo(system :[X = T|P]),echo('\n'),echo(simplify: (X = T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B).
 
-reduit(expand,(X ?= T), P;S, A;[X = T|B]):- echo(system :[X = T|P]),echo('\n'),echo(expand: (X = T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B), !.
+reduit(expand,(X ?= T), P;S, A;[X = T|B]):- echo(system :[X = T|P]),echo('\n'),echo(expand: (X = T)),echo('\n'),substitution(X,T,P,A),substitution(X,T,S,B).
 
-reduit(decompose,(X ?= T), P;S, Q;S):- echo(system :[X = T|P]),echo('\n'),echo(decompose: (X = T)),echo('\n'), functor(X,_,A), arg_list(A,X ?= T,[],L2), concat(L2,P,Q), !.
+reduit(decompose,(X ?= T), P;S, Q;S):- echo(system :[X = T|P]),echo('\n'),echo(decompose: (X = T)),echo('\n'), functor(X,_,A), arg_list(A,X ?= T,[],L2), concat(L2,P,Q).
 
  % Question 2
 
@@ -121,7 +121,7 @@ println([]):- echo('\n'), !.
 println([X=T|P]):-  echo(X = T),echo('\n'),println(P).
 
 unifie2([],Q):- echo('\n'),println(Q),write('Systeme equation unifiable'),!.
-unifie2([X|P1],Q1):- regle(X,R),reduit(R,X,P1;Q1,P2;Q2),unifie2(P2,Q2).
+unifie2([X|P],Q):- echo('\n 2 \n 3 \n 4'),regle(X,R1),reduit(R1,X,P;Q,P2;Q2),unifie2(P2,Q2).
 
 % predicats pour choix pondere, a instancier regle de poids, et element a retirer
 
@@ -164,7 +164,7 @@ option(non):- fail, !.
 
 fin:- write('Souhaitez-vous continuer a utiliser le programme? Entrer oui ou non'),write('>> Choix:'),read(Choix),option(Choix), !.
 
-demarrer:- write('Ecrire le systeme que vous souhaitez unifier: \n'), write('>> Systeme equation:'), read(Sys),write('\n Differents choix de stratégie: laquelle désirez-vous utiliser ? Entrer premier ou pondere \n'),write('>> Strategie :'),read(Strat),write('\n Souhaitez-vous faire apparaitre dans le terminal la trace ? Entrer oui ou non \n'),write('>> Choix:'),read(Choix),instruction(Sys,Strat,Choix),fin, !.
+demarrer:- write('Ecrire le systeme que vous souhaitez unifier: \n'), write('>> Systeme equation:'), read(Sys),write('\n Differents choix de strategie: laquelle desirez-vous utiliser ? Entrer premier ou pondere \n'),write('>> Strategie :'),read(Strat),write('\n Souhaitez-vous faire apparaitre dans le terminal la trace ? Entrer oui ou non \n'),write('>> Choix:'),read(Choix),instruction(Sys,Strat,Choix),fin, !.
 
-sujet:- write('\t Ce programme repose sur l\'Algorithme d\'unification de Martelli-Montanari \n'),demarrer, !.
+sujet:- write('\t Ce programme repose sur l\'Algorithme d\'unification de Martelli-Montanari \n Nb: ajouter . a chaque entre'),demarrer, !.
 
