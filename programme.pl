@@ -144,7 +144,7 @@ ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 >
 choix_premier([],_,_,_):- !.
 choix_premier([E|P],Q,E,R):- regle(E,R),reduit(R,E,P;Q,P2;Q2),unifie2(P2,Q2).
 
-choix_pondere([],Q,_,_):- echo('\n'),affiche(Q),write('Systeme non unifiable'),!.
+choix_pondere([],Q,_,_):- echo('\n'),println(Q),write('Systeme non unifiable'),!.
 choix_pondere(P1,Q,E,R):- ordrePoids(P1,R,E),retirerElement(E,P1,P2),reduit(R,E,P2;Q,P3;Q3),choix_pondere(P3,Q3,_,_).
 
 unifie(P,premier):- choix_premier(P,_,_,_).
