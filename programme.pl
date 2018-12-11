@@ -57,6 +57,10 @@ regle((T ?= _),orient) :- nonvar(T),!.
 append(X,[],X).
 append(Y,[X|P],[X|Q]) :- append(Y,P,Q).
 
+decomposer((X ?= T),1,L1,[A ?= B|L1]) :- arg(1,X,A),arg(1,T,B),!.
+
+decomposer((X ?= T),N,L1,L2) :- N2 is (N-1),arg(N,X,A),arg(N,T,B),decomposer(X ?= T,N2,[A ?= B|L1],L2).
+
 % ajout du prédicat substitution pour les prédicats réduits
 % on remplace premier parametre par deuxieme parametre dans équation du troisieme parametre
 % et on met le resultat dans le quatrieme parametre
@@ -83,16 +87,12 @@ substitution_autre(_,_,[],[]):- !.
 
 substitution_autre(X,T,[A=B|P],[A2=B2|P2]):- substitution_terme(X,T,A,A2),substitution_terme(X,T,B,B2),substitution_autre(X,T,P,P2).
 
-list((X ?= T),1,L1,[A ?= B|L1]) :- arg(1,X,A),arg(1,T,B),!.
-
-list((X ?= T),N,L1,L2) :- N2 is (N-1),arg(N,X,A),arg(N,T,B),list(X ?= T,N2,[A ?= B|L1],L2).
-
 
 % fin predicats pour reduit, donc predicats reduit
 
 % Liste des prédicats réduits:
 
-reduit(decompose,(X ?= Y),P1;Q,P2;Q):- echo(system :[X = Y|P1]),echo('\n'),echo(decompose :(X = Y)),echo('\n'),functor(X,_,A),list(X ?= Y,A,[],L),append(P1,L,P2),!.
+reduit(decompose,(X ?= Y),P1;Q,P2;Q):- echo(system :[X = Y|P1]),echo('\n'),echo(decompose :(X = Y)),echo('\n'),functor(X,_,A),decomposer(X ?= Y,A,[],L),append(P1,L,P2),!.
 
 reduit(rename,(X ?= Y),P1;Q1,P2;[X=Y|Q2]):- echo(system :[X = Y|P1]),echo('\n'),echo(rename :(X = Y)),echo('\n'),substitution(X,Y,P1,P2),substitution_autre(X,Y,Q1,Q2),!.
 
@@ -118,25 +118,23 @@ poids(orient,3).
 poids(decompose,2).
 poids(expand,1).
 
-% predicats pour choix pondere, a instancier regle de poids, et element a retirer
+% predicats pour choix pondere et choix_premier
 
 ordrePoids([X],R,X):- regle(X,R),!.
-ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 >= P2,!,ordrePoids([X|P],R,E).
-ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 =< P2,!,ordrePoids([T|P],R,E).
+ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),((P1 >= P2)->ordrePoids([X|P],R,E);ordrePoids([T|P],R,E)).
+
 
 % pour afficher à les variables de depart
 println([]):- !.
-println([X=T|P]):-  echo(X = T),echo('\n'),println(P).
+println([X=T|P]):- echo(X = T),echo('\n'),println(P).
 
 % predicats des choix d application
 
 choix_premier([],Q,_,_):- echo('\n'),println(Q),echo('\n'),write('Yes'),!.
 choix_premier([E|P],Q,E,R):- regle(E,R),reduit(R,E,P;Q,P2;Q2),choix_premier(P2,Q2,_,_).
 
-
 retirerElem(_,[],[]):- !.
-retirerElem(X,[T|R],V):- X == T, V = R, !.
-retirerElem(X,[T|R],V):- X \== T, retirerElem(X,R,V).
+retirerElem(X,[T|R],V):- ((X == T)->(V = R),!; retirerElem(X,R,V)).
 
 choix_pondere([],Q,_,_):- echo('\n'),println(Q),echo('\n'),write('Yes'),!.
 choix_pondere(P1,Q,E,R):- ordrePoids(P1,R,E),retirerElem(E,P1,P2),reduit(R,E,P2;Q,P3;Q3),choix_pondere(P3,Q3,_,_).
@@ -160,6 +158,4 @@ option(non):- fail, !.
 
 fin:- write('\n \t Souhaitez-vous continuer a utiliser le programme? Entrer oui ou non \n'),write(' \t Choix:'),read(Choix),option(Choix), !.
 
-demarrer:- write('\n Ecrire le systeme que vous souhaitez unifier: \n'), write(' \t Systeme equation:'), read(Sys),write('\n Differents choix de strategie: laquelle desirez-vous utiliser ? Entrez premier ou pondere \n'),write('\t Strategie:'),read(Strat),write('\n Souhaitez-vous faire apparaitre dans le terminal la trace ? Entrer oui ou non \n'),write('\t Choix:'),read(Choix),write('\n'),instruction(Sys,Strat,Choix),fin, !.
-
-sujet:- write('\t Ce programme repose sur l\'Algorithme d\'unification de Martelli-Montanari \n \n Nb: N\'oubliez pas d\'ajouter un point a chaque entre \n'),demarrer, !.
+demarrer:- write('\t Ce programme repose sur l\'Algorithme d\'unification de Martelli-Montanari \n \n Nb: N\'oubliez pas d\'ajouter un point a chaque entre \n'),write('\n Ecrire le systeme que vous souhaitez unifier: \n'), write(' \t Systeme equation:'), read(Sys),write('\n Differents choix de strategie: laquelle desirez-vous utiliser ? Entrez premier ou pondere \n'),write('\t Strategie:'),read(Strat),write('\n Souhaitez-vous faire apparaitre dans le terminal la trace ? Entrer oui ou non \n'),write('\t Choix:'),read(Choix),write('\n'),instruction(Sys,Strat,Choix),fin, !.
