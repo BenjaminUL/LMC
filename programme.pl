@@ -34,6 +34,7 @@ occur_check_base(V,T,N) :- arg(N,T,X),occur_check(V,X);N1 is (N-1),occur_check_b
 
 % Listes des predicats regles:
 
+
 regle((_ ?= T),rename) :- var(T),!.
 
 regle((_ ?= T),simplify) :- atomic(T),!.
@@ -82,16 +83,16 @@ substitution_autre(_,_,[],[]):- !.
 
 substitution_autre(X,T,[A=B|P],[A2=B2|P2]):- substitution_terme(X,T,A,A2),substitution_terme(X,T,B,B2),substitution_autre(X,T,P,P2).
 
-arg_list((X ?= T),1,L1,[A ?= B|L1]) :- arg(1,X,A),arg(1,T,B),!.
+list((X ?= T),1,L1,[A ?= B|L1]) :- arg(1,X,A),arg(1,T,B),!.
 
-arg_list((X ?= T),N,L1,L2) :- N2 is (N-1),arg(N,X,A),arg(N,T,B),arg_list(X ?= T,N2,[A ?= B|L1],L2).
+list((X ?= T),N,L1,L2) :- N2 is (N-1),arg(N,X,A),arg(N,T,B),list(X ?= T,N2,[A ?= B|L1],L2).
 
 
 % fin predicats pour reduit, donc predicats reduit
 
 % Liste des prédicats réduits:
 
-reduit(decompose,(X ?= Y),P1;Q,P2;Q):- echo(system :[X = Y|P1]),echo('\n'),echo(decompose :(X = Y)),echo('\n'),functor(X,_,A),arg_list(X ?= Y,A,[],L),append(P1,L,P2),!.
+reduit(decompose,(X ?= Y),P1;Q,P2;Q):- echo(system :[X = Y|P1]),echo('\n'),echo(decompose :(X = Y)),echo('\n'),functor(X,_,A),list(X ?= Y,A,[],L),append(P1,L,P2),!.
 
 reduit(rename,(X ?= Y),P1;Q1,P2;[X=Y|Q2]):- echo(system :[X = Y|P1]),echo('\n'),echo(rename :(X = Y)),echo('\n'),substitution(X,Y,P1,P2),substitution_autre(X,Y,Q1,Q2),!.
 
@@ -119,14 +120,11 @@ poids(expand,1).
 
 % predicats pour choix pondere, a instancier regle de poids, et element a retirer
 
-retirerElement(_,[],[]):- !.
-retirerElement(X,[T|R],V):- X == T, V = R, !.
-retirerElement(X,[T|R],V):- X \== T, retirerElement(X,R,V).
-
-ordrePoids([X],R,X):-regle(X,R),!.
+ordrePoids([X],R,X):- regle(X,R),!.
 ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 >= P2,!,ordrePoids([X|P],R,E).
 ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 =< P2,!,ordrePoids([T|P],R,E).
 
+% pour afficher à les variables de depart
 println([]):- !.
 println([X=T|P]):-  echo(X = T),echo('\n'),println(P).
 
@@ -135,8 +133,13 @@ println([X=T|P]):-  echo(X = T),echo('\n'),println(P).
 choix_premier([],Q,_,_):- echo('\n'),println(Q),echo('\n'),write('Yes'),!.
 choix_premier([E|P],Q,E,R):- regle(E,R),reduit(R,E,P;Q,P2;Q2),choix_premier(P2,Q2,_,_).
 
+
+retirerElem(_,[],[]):- !.
+retirerElem(X,[T|R],V):- X == T, V = R, !.
+retirerElem(X,[T|R],V):- X \== T, retirerElem(X,R,V).
+
 choix_pondere([],Q,_,_):- echo('\n'),println(Q),echo('\n'),write('Yes'),!.
-choix_pondere(P1,Q,E,R):- ordrePoids(P1,R,E),retirerElement(E,P1,P2),reduit(R,E,P2;Q,P3;Q3),choix_pondere(P3,Q3,_,_).
+choix_pondere(P1,Q,E,R):- ordrePoids(P1,R,E),retirerElem(E,P1,P2),reduit(R,E,P2;Q,P3;Q3),choix_pondere(P3,Q3,_,_).
 
 unifie(P,premier):- choix_premier(P,_,_,_).
 unifie(P,pondere):- choix_pondere(P,_,_,_).
