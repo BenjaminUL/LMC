@@ -117,34 +117,25 @@ poids(orient,3).
 poids(decompose,2).
 poids(expand,1).
 
-% commencer a écrire prédicats suivants
-
-% Predicat pour forcer affichage a la fin des variables X, Y et Z par exemple
-symb([]).
-symb([X = X|T]) :- symb(T).
-
-println([]):- echo('\n'), !.
-println([X=T|P]):-  echo(X = T),echo('\n'),println(P).
-
-unifie2([],Q):- echo('\n'),println(Q),write('Yes'),!.
-unifie2([X|P],Q):- regle(X,R),reduit(R,X,P;Q,P2;Q2),unifie2(P2,Q2).
-
 % predicats pour choix pondere, a instancier regle de poids, et element a retirer
 
 retirerElement(_,[],[]):- !.
-retirerElement(X,[T|R],Val):- X == T, Val = R, !.
-retirerElement(X,[T|R],Val):- X \== T, retirerElement(X,R,Val).
+retirerElement(X,[T|R],V):- X == T, V = R, !.
+retirerElement(X,[T|R],V):- X \== T, retirerElement(X,R,V).
 
-ordrePoids([X],R,X):- regle(X,R), !.
-ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 =< P2, !,ordrePoids([T|P],R,E).
-ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 >= P2, !,ordrePoids([X|P],R,E).
+ordrePoids([X],R,X):-regle(X,R),!.
+ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 >= P2,!,ordrePoids([X|P],R,E).
+ordrePoids([X,T|P],R,E):- regle(X,R1),poids(R1,P1),regle(T,R2),poids(R2,P2),P1 =< P2,!,ordrePoids([T|P],R,E).
+
+println([]):- !.
+println([X=T|P]):-  echo(X = T),echo('\n'),println(P).
 
 % predicats des choix d application
 
-choix_premier([],_,_,_):- !.
-choix_premier([E|P],Q,E,R):- regle(E,R),reduit(R,E,P;Q,P2;Q2),unifie2(P2,Q2).
+choix_premier([],Q,_,_):- echo('\n'),println(Q),echo('\n'),write('Yes'),!.
+choix_premier([E|P],Q,E,R):- regle(E,R),reduit(R,E,P;Q,P2;Q2),choix_premier(P2,Q2,_,_).
 
-choix_pondere([],Q,_,_):- echo('\n'),println(Q),write('Systeme non unifiable'),!.
+choix_pondere([],Q,_,_):- echo('\n'),println(Q),echo('\n'),write('Yes'),!.
 choix_pondere(P1,Q,E,R):- ordrePoids(P1,R,E),retirerElement(E,P1,P2),reduit(R,E,P2;Q,P3;Q3),choix_pondere(P3,Q3,_,_).
 
 unifie(P,premier):- choix_premier(P,_,_,_).
